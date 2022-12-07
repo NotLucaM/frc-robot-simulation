@@ -4,13 +4,24 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.PowerDistribution;
 import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
 
 public class Robot extends LoggedRobot {
 
     @Override
     public void robotInit() {
+        // Advantage scope
+        Logger.getInstance().recordMetadata("ProjectName", "Robot 2023");
 
+        Logger.getInstance().addDataReceiver(new WPILOGWriter("/media/sda1/")); // Log to a USB stick
+        Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+        new PowerDistribution(1, PowerDistribution.ModuleType.kRev); // Enables power distribution logging
+
+        Logger.getInstance().start();
     }
 
     @Override
