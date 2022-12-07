@@ -1,16 +1,19 @@
 package frc.robot;
 
+import org.photonvision.common.hardware.VisionLEDMode;
+
 public class Commands {
 
     // vision
-    private boolean visionWantedSnapshot = false;
+    public boolean visionWantedSnapshot = false;
+    public VisionLEDMode visionWantedLEDs = VisionLEDMode.kOff;
 
+    @Override
+    protected Object clone() {
+        Commands clone = new Commands();
 
-    public synchronized boolean isVisionWantedSnapshot() {
-        return visionWantedSnapshot;
-    }
+        clone.visionWantedSnapshot = false;
 
-    public synchronized void setVisionWantedSnapshot(boolean visionWantedSnapshot) {
-        this.visionWantedSnapshot = visionWantedSnapshot;
+        return clone;
     }
 }

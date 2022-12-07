@@ -5,5 +5,5 @@ public class VisionConstants {
                                 TARGET_HEIGHT_METERS = 0.0,
                                 CAMERA_PITCH_RADIANS = 0.0;
 
-
+    public static final int DEFAULT_INDEX = 0;
 }
