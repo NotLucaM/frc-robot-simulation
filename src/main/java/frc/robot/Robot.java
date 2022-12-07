@@ -5,12 +5,18 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.PowerDistribution;
+import frc.subsystems.SubsystemBase;
+import frc.subsystems.Vision;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 
+import java.util.List;
+
 public class Robot extends LoggedRobot {
+
+    private final List<SubsystemBase> subsystems = List.of(new Vision());
 
     @Override
     public void robotInit() {

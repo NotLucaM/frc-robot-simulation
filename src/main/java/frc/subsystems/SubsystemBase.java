@@ -13,7 +13,7 @@ public abstract class SubsystemBase {
     }
 
     public abstract void update(Commands commands, State state);
-    public abstract void write(State state);
+    public abstract void write();
     public abstract void read(State state);
     public abstract void configure();
 
