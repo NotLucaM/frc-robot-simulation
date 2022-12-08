@@ -1,12 +1,13 @@
 package frc.robot;
 
+import frc.subsystems.Vision;
 import org.photonvision.common.hardware.VisionLEDMode;
 
 public class Commands {
 
     // vision
     public boolean visionWantedSnapshot = false;
-    public VisionLEDMode visionWantedLEDs = VisionLEDMode.kOff;
+    public Vision.State visionWantedLEDs = Vision.State.DRIVE;
 
     @Override
     protected Object clone() {

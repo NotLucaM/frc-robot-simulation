@@ -4,7 +4,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Commands;
-import frc.robot.State;
+import frc.robot.RobotState;
 import org.photonvision.PhotonCamera;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -16,31 +16,65 @@ import static frc.constants.VisionConstants.*;
 
 public class Vision extends SubsystemBase {
 
-    private final PhotonCamera aprilCamera = new PhotonCamera("april");
-    private final PhotonCamera tapeCamera = new PhotonCamera("tape");
+    public enum State {
+        DRIVE, TARGETING
+    }
 
+    private final PhotonCamera camera = new PhotonCamera("tape");
+
+    private State currentState = State.DRIVE;
     private VisionLEDMode wantedLEDs;
+    private int wantedIndex = 0;
+    private boolean driverMode = true;
+    private boolean wantedChange = false;
     private boolean wantedSnapshot;
 
     @Override
-    public void update(Commands commands, State state) {
-        wantedLEDs = commands.visionWantedLEDs;
+    public void update(Commands commands, RobotState state) {
+        switch (commands.visionWantedLEDs) {
+            case DRIVE:
+                wantedLEDs = VisionLEDMode.kOff;
+                wantedIndex = 0;
+                driverMode = true;
+
+                if (currentState != State.DRIVE) {
+                    wantedChange = true;
+                    currentState = State.DRIVE;
+                }
+                break;
+            case TARGETING:
+                wantedLEDs = VisionLEDMode.kOn;
+                wantedIndex = 0;
+                driverMode = false;
+
+                if (currentState != State.TARGETING) {
+                    wantedChange = true;
+                    currentState = State.TARGETING;
+                }
+                break;
+        }
         wantedSnapshot = commands.visionWantedSnapshot;
     }
 
     @Override
     public void write() {
-        if (wantedSnapshot) tapeCamera.takeOutputSnapshot();
-        if (tapeCamera.getLEDMode() != wantedLEDs) tapeCamera.setLED(wantedLEDs);
+        if (wantedSnapshot) camera.takeOutputSnapshot();
+
+        if (wantedChange) {
+            camera.setPipelineIndex(wantedIndex);
+            camera.setLED(wantedLEDs);
+            camera.setDriverMode(driverMode);
+            wantedChange = false;
+        }
     }
 
     @Override
-    public void read(State state) {
-        PhotonPipelineResult tapeResult = tapeCamera.getLatestResult();
-        state.visionLatency = tapeResult.getLatencyMillis();
+    public void read(RobotState state) {
+        PhotonPipelineResult result = camera.getLatestResult();
+        state.visionLatency = result.getLatencyMillis();
 
-        if (tapeResult.hasTargets()) {
-            state.visionTarget = tapeResult.getBestTarget();
+        if (result.hasTargets()) {
+            state.visionTarget = result.getBestTarget();
             state.visionDistanceToTarget =
                     PhotonUtils.calculateDistanceToTargetMeters(
                             CAMERA_HEIGHT_METERS,
@@ -52,17 +86,17 @@ public class Vision extends SubsystemBase {
                     CAMERA_HEIGHT_METERS, TARGET_HEIGHT_METERS, CAMERA_PITCH_RADIANS,
                     0.0,
                     Rotation2d.fromDegrees(-state.visionTarget.getYaw()),
-                    state.driveRotation, TARGET_POSE, CAMERA_TO_ROBOT);
+                    state.driveYaw, TARGET_POSE, CAMERA_TO_ROBOT);
 
             // TODO: ensure time is correct
-            state.drivePose.addVisionMeasurement(fieldPos, tapeResult.getTimestampSeconds());
+            state.drivePose.addVisionMeasurement(fieldPos, result.getTimestampSeconds());
         } else {
             state.visionTarget = null;
             state.visionDistanceToTarget = null;
         }
 
-        PhotonPipelineResult aprilResult = aprilCamera.getLatestResult();
-        var aprilTags = aprilResult.getTargets();
+        // TODO: finish april tags
+        var aprilTags = result.getTargets();
         for (var tag : aprilTags) {
             int targetId = tag.getFiducialId();
             double poseAmbiguity = tag.getPoseAmbiguity();
@@ -74,7 +108,6 @@ public class Vision extends SubsystemBase {
 
     @Override
     public void configure() {
-        aprilCamera.setPipelineIndex(DEFAULT_INDEX);
-        tapeCamera.setPipelineIndex(DEFAULT_INDEX);
+        camera.setPipelineIndex(DEFAULT_INDEX);
     }
 }

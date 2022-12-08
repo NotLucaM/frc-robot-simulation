@@ -1,7 +1,7 @@
 package frc.subsystems;
 
 import frc.robot.Commands;
-import frc.robot.State;
+import frc.robot.RobotState;
 import frc.util.Util;
 
 public abstract class SubsystemBase {
@@ -12,9 +12,9 @@ public abstract class SubsystemBase {
          name = Util.classToJsonName(getClass());
     }
 
-    public abstract void update(Commands commands, State state);
+    public abstract void update(Commands commands, RobotState state);
     public abstract void write();
-    public abstract void read(State state);
+    public abstract void read(RobotState state);
     public abstract void configure();
 
     public void log() {}
