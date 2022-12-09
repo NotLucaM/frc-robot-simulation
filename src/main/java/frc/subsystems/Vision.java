@@ -1,8 +1,8 @@
 package frc.subsystems;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.apriltag.AprilTagFieldLayout;
 import frc.robot.Commands;
 import frc.robot.RobotState;
 import org.photonvision.PhotonCamera;
@@ -95,14 +95,36 @@ public class Vision extends SubsystemBase {
             state.visionDistanceToTarget = null;
         }
 
-        // TODO: finish april tags
         var aprilTags = result.getTargets();
         for (var tag : aprilTags) {
             int targetId = tag.getFiducialId();
             double poseAmbiguity = tag.getPoseAmbiguity();
 
+            if (APRIL_FIELD.getTagPose(targetId).isEmpty()) {
+                break;
+            }
+            Pose3d targetFieldPose = APRIL_FIELD.getTagPose(targetId).get();
+
             Transform3d bestCameraToTarget = tag.getBestCameraToTarget();
             Transform3d alternateCameraToTarget = tag.getAlternateCameraToTarget();
+
+            // TODO: ensure adding is correct
+            Pose3d bestRobotField = targetFieldPose.plus(bestCameraToTarget);
+            Pose3d altRobotField = targetFieldPose.plus(alternateCameraToTarget);
+
+            Pose2d currentLocation = state.drivePose.getEstimatedPosition();
+            Translation2d currentTranslation2d = currentLocation.getTranslation();
+            Translation3d currentTranslation = new Translation3d(currentTranslation2d.getX(),
+                    currentTranslation2d.getY(), CAMERA_HEIGHT_METERS);
+            var bestDist = bestRobotField.getTranslation().getDistance(currentTranslation);
+            var altDist = altRobotField.getTranslation().getDistance(currentTranslation);
+
+            // TODO: ensure time is correct
+            if (bestDist <= altDist || poseAmbiguity < 0.2) {
+                state.drivePose.addVisionMeasurement(bestRobotField.toPose2d(), result.getTimestampSeconds());
+            } else {
+                state.drivePose.addVisionMeasurement(altRobotField.toPose2d(), result.getTimestampSeconds());
+            }
         }
     }
 
