@@ -6,6 +6,7 @@ import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 public class RobotState {
@@ -25,4 +26,20 @@ public class RobotState {
     public double visionLatency = 0.0;
     public Double visionDistanceToTarget = 0.0;
     public PhotonTrackedTarget visionTarget = null;
+
+    public void log() {
+        Logger log = Logger.getInstance();
+        log.recordOutput("Vision/latency", visionLatency);
+        log.recordOutput("Vision/distanceToTarget", visionDistanceToTarget);
+        log.recordOutput("Vision/visionTarget", visionTarget != null);
+
+        log.recordOutput("Drive/gyroReady", gyroReady);
+        log.recordOutput("Drive/driveYaw", driveYaw.getDegrees());
+        log.recordOutput("Drive/driveAngularVelocity", driveYawAngularVelocityDegrees);
+        log.recordOutput("Drive/driveWheelSpeedLeft", driveWheelSpeeds.leftMetersPerSecond);
+        log.recordOutput("Drive/driveWheelSpeedRight", driveWheelSpeeds.rightMetersPerSecond);
+        log.recordOutput("Drive/driveLeftPosition", driveLeftPosition);
+        log.recordOutput("Drive/driveRightPosition", driveRightPosition);
+        log.recordOutput("Drive/position", drivePose.getEstimatedPosition());
+    }
 }

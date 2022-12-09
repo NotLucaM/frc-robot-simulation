@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.PowerDistribution;
+import frc.subsystems.Drive;
 import frc.subsystems.SubsystemBase;
 import frc.subsystems.Vision;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -16,7 +17,13 @@ import java.util.List;
 
 public class Robot extends LoggedRobot {
 
-    private final List<SubsystemBase> subsystems = List.of(new Vision());
+    private final List<SubsystemBase> subsystems = List.of(
+            new Vision(),
+            new Drive()
+    );
+
+    private RobotState state;
+    private Commands commands;
 
     @Override
     public void robotInit() {
@@ -29,38 +36,61 @@ public class Robot extends LoggedRobot {
         Logger.getInstance().addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
 
         Logger.getInstance().start();
-    }
 
-    @Override
-    public void robotPeriodic() {}
+        state = new RobotState();
+    }
 
     @Override
     public void autonomousInit() {}
 
     @Override
-    public void autonomousPeriodic() {}
+    public void autonomousPeriodic() {
+        readSubsystems();
+        updateApply();
+    }
 
     @Override
     public void teleopInit() {}
 
     @Override
-    public void teleopPeriodic() {}
+    public void teleopPeriodic() {
+        readSubsystems();
+        updateApply();
+    }
 
     @Override
     public void disabledInit() {}
 
     @Override
-    public void disabledPeriodic() {}
+    public void disabledPeriodic() {
+        readSubsystems();
+    }
 
     @Override
     public void testInit() {}
 
     @Override
-    public void testPeriodic() {}
+    public void testPeriodic() {
+        readSubsystems();
+        updateApply();
+    }
 
     @Override
     public void simulationInit() {}
 
     @Override
-    public void simulationPeriodic() {}
+    public void simulationPeriodic() {
+        readSubsystems();
+        updateApply();
+    }
+
+    private void readSubsystems() {
+        subsystems.forEach(s -> s.read(state));
+        state.log();
+    }
+
+    private void updateApply () {
+        subsystems.forEach(s -> s.update(commands, state));
+        subsystems.forEach(SubsystemBase::write);
+    }
 }

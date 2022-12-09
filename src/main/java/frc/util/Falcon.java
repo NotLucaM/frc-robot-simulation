@@ -1,8 +1,10 @@
 package frc.util;
 
+import com.ctre.phoenix.motorcontrol.DemandType;
+import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
-public class Falcon extends TalonFX {
+public class Falcon extends TalonFX implements Motor {
 
     private final String name;
 
@@ -17,6 +19,23 @@ public class Falcon extends TalonFX {
     public Falcon(int deviceNumber, String name) {
         super(deviceNumber);
         this.name = name;
+    }
+
+    public void setOutput(ControllerOutput output) {
+        double reference = output.getReference();
+        var controllerMode = switch (output.getControlMode()) {
+            case PERCENT_OUTPUT -> TalonFXControlMode.PercentOutput;
+            case POSITION -> TalonFXControlMode.Position;
+            case VELOCITY -> TalonFXControlMode.Velocity;
+            case PROFILED_POSITION -> TalonFXControlMode.MotionMagic;
+            case PROFILED_VELOCITY -> TalonFXControlMode.MotionProfile;
+        };
+        double convertedReference = switch (output.getControlMode()) {
+            case VELOCITY,PROFILED_VELOCITY -> reference / velocityConversion;
+            case POSITION,PROFILED_POSITION -> reference / positionConversion;
+            default -> reference;
+        };
+        set(controllerMode, convertedReference, DemandType.ArbitraryFeedForward, output.getArbitraryDemand());
     }
 
     public void setConversionFactors(double velocityConversion, double positionConversion) {
