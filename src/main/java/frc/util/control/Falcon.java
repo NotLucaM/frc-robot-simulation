@@ -1,10 +1,10 @@
-package frc.util;
+package frc.util.control;
 
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.TalonFXControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
-public class Falcon extends TalonFX implements Motor {
+public class Falcon extends WPI_TalonFX implements Motor {
 
     private final String name;
 
@@ -17,11 +17,15 @@ public class Falcon extends TalonFX implements Motor {
     }
 
     public Falcon(int deviceNumber, String name) {
-        super(deviceNumber);
+        super(deviceNumber, "rio");
         this.name = name;
     }
 
     public void setOutput(ControllerOutput output) {
+        if (output == null) {
+            output = new ControllerOutput();
+        }
+
         double reference = output.getReference();
         var controllerMode = switch (output.getControlMode()) {
             case PERCENT_OUTPUT -> TalonFXControlMode.PercentOutput;

@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.PowerDistribution;
 import frc.subsystems.Drive;
 import frc.subsystems.SubsystemBase;
 import frc.subsystems.Vision;
@@ -25,6 +24,8 @@ public class Robot extends LoggedRobot {
     private RobotState state;
     private Commands commands;
 
+    private OperatorInterface operatorInterface;
+
     @Override
     public void robotInit() {
         // Advantage scope
@@ -38,6 +39,10 @@ public class Robot extends LoggedRobot {
         Logger.getInstance().start();
 
         state = new RobotState();
+        commands = new Commands();
+        operatorInterface = new OperatorInterface();
+
+        subsystems.forEach(SubsystemBase::configure);
     }
 
     @Override
@@ -50,11 +55,14 @@ public class Robot extends LoggedRobot {
     }
 
     @Override
-    public void teleopInit() {}
+    public void teleopInit() {
+        commands.setDriveTeleop();
+    }
 
     @Override
     public void teleopPeriodic() {
         readSubsystems();
+        operatorInterface.update(commands, state);
         updateApply();
     }
 
@@ -80,8 +88,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void simulationPeriodic() {
-        readSubsystems();
-        updateApply();
+        subsystems.forEach(SubsystemBase::simulate);
     }
 
     private void readSubsystems() {
@@ -89,7 +96,7 @@ public class Robot extends LoggedRobot {
         state.log();
     }
 
-    private void updateApply () {
+    private void updateApply() {
         subsystems.forEach(s -> s.update(commands, state));
         subsystems.forEach(SubsystemBase::write);
     }

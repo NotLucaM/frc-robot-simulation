@@ -5,6 +5,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.apriltag.AprilTagFieldLayout;
 import frc.robot.Commands;
 import frc.robot.RobotState;
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -21,6 +22,7 @@ public class Vision extends SubsystemBase {
     }
 
     private final PhotonCamera camera = new PhotonCamera("tape");
+    private final Logger log = Logger.getInstance();
 
     private State currentState = State.DRIVE;
     private VisionLEDMode wantedLEDs;
@@ -87,12 +89,13 @@ public class Vision extends SubsystemBase {
                     0.0,
                     Rotation2d.fromDegrees(-state.visionTarget.getYaw()),
                     state.driveYaw, TARGET_POSE, CAMERA_TO_ROBOT);
+            log.recordOutput("Vision/estimatedFieldPos", fieldPos);
 
             // TODO: ensure time is correct
             state.drivePose.addVisionMeasurement(fieldPos, result.getTimestampSeconds());
         } else {
             state.visionTarget = null;
-            state.visionDistanceToTarget = null;
+            state.visionDistanceToTarget = 0.0;
         }
 
         var aprilTags = result.getTargets();

@@ -3,6 +3,7 @@ package frc.constants;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.apriltag.AprilTag;
 import edu.wpi.first.wpilibj.apriltag.AprilTagFieldLayout;
 
@@ -14,6 +15,10 @@ public class FieldConstants {
     public static final Transform2d CAMERA_TO_ROBOT = new Transform2d();
     public static final double FIELD_LENGTH = 0.0,
                                 FIELD_WIDTH = 0.0;
+    public static final double ROBOT_MOI = 8.0;
+    public static final double ROBOT_MASS = 60;
+    public static final double ROBOT_WHEEL_RADIUS = Units.inchesToMeters(4);
+    public static final double WHEEL_DISTANCE = 0.55;
 
     public static List<AprilTag> APRIL_TAGS = List.of(
             new AprilTag(0, new Pose3d())

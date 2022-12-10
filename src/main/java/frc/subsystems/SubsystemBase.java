@@ -3,10 +3,12 @@ package frc.subsystems;
 import frc.robot.Commands;
 import frc.robot.RobotState;
 import frc.util.Util;
+import org.littletonrobotics.junction.Logger;
 
 public abstract class SubsystemBase {
 
     private final String name;
+    protected final Logger log = Logger.getInstance();
 
     protected SubsystemBase() {
          name = Util.classToJsonName(getClass());
@@ -17,6 +19,7 @@ public abstract class SubsystemBase {
     public abstract void read(RobotState state);
     public abstract void configure();
 
+    public void simulate() {}
     public void log() {}
 
     @Override

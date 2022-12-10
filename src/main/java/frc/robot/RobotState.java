@@ -21,10 +21,11 @@ public class RobotState {
     public double driveYawAngularVelocityDegrees = 0.0;
     public DifferentialDriveWheelSpeeds driveWheelSpeeds = new DifferentialDriveWheelSpeeds(0.0, 0.0);
     public double driveLeftPosition, driveRightPosition;
+    public boolean driveIsQuickTurning, driveIsSlowTurning, driveIsSlowMoving;
 
     /* VISION */
     public double visionLatency = 0.0;
-    public Double visionDistanceToTarget = 0.0;
+    public double visionDistanceToTarget = 0.0;
     public PhotonTrackedTarget visionTarget = null;
 
     public void log() {
