@@ -88,7 +88,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void simulationPeriodic() {
-        subsystems.forEach(SubsystemBase::simulate);
+        subsystems.forEach(s -> s.simulate(state));
     }
 
     private void readSubsystems() {

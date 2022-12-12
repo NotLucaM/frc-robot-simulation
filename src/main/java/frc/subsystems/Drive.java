@@ -1,6 +1,7 @@
 package frc.subsystems;
 
 import com.ctre.phoenix.sensors.PigeonIMU;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
@@ -42,7 +43,17 @@ public class Drive extends SubsystemBase {
             rightSlaveFalcon = new Falcon(DRIVE_RIGHT_SLAVE_ID, "Drive Right Slave");
     private final Pigeon gyro = new Pigeon(9);
 
+    private double leftVelocity, rightVelocity, leftPosition, rightPosition;
     private final DifferentialDrivetrainSim driveSim = new DifferentialDrivetrainSim(
+            DCMotor.getFalcon500(2),
+            DRIVE_GEAR_RATIO,
+            ROBOT_MOI,
+            ROBOT_MASS,
+            ROBOT_WHEEL_RADIUS,
+            WHEEL_DISTANCE,
+            VecBuilder.fill(0.005, 0.005, 0.005, 0.2, 0.2, 0.010, 0.010)
+    );
+    private final DifferentialDrivetrainSim driveSimReal = new DifferentialDrivetrainSim(
             DCMotor.getFalcon500(2),
             DRIVE_GEAR_RATIO,
             ROBOT_MOI,
@@ -108,15 +119,14 @@ public class Drive extends SubsystemBase {
 
         // don't update position if gyro is not working
         if (state.gyroReady) {
-            state.drivePose.update(state.driveYaw, state.driveWheelSpeeds,
-                    state.driveLeftPosition, state.driveRightPosition);
+            state.drivePose.update(state.driveYaw, state.driveLeftPosition, state.driveRightPosition);
         } else {
             // TODO: update position without gyro
         }
     }
 
     @Override
-    public void simulate() {
+    public void simulate(RobotState state) {
         var leftSim = leftMasterFalcon.getSimCollection();
         var rightSim = rightMasterFalcon.getSimCollection();
         var pigeonSim = gyro.getSimCollection();
@@ -126,11 +136,13 @@ public class Drive extends SubsystemBase {
 
         driveSim.setInputs(leftSim.getMotorOutputLeadVoltage(),
                             rightSim.getMotorOutputLeadVoltage());
-
         driveSim.update(0.02);
 
-        Function<Double, Integer> distNative = (Double distance) -> (int) (distance / POSITION_CONVERSION);
+        driveSimReal.setInputs(leftSim.getMotorOutputLeadVoltage(),
+                                rightSim.getMotorOutputLeadVoltage());
+        driveSimReal.update(0.02);
 
+        Function<Double, Integer> distNative = (Double distance) -> (int) (distance / POSITION_CONVERSION);
         Function<Double, Integer> velNative = (Double velocity) -> (int) (velocity / VELOCITY_CONVERSION);
 
         leftSim.setIntegratedSensorRawPosition(distNative.apply(driveSim.getLeftPositionMeters()));
@@ -138,6 +150,12 @@ public class Drive extends SubsystemBase {
 
         leftSim.setIntegratedSensorVelocity(velNative.apply(driveSim.getLeftVelocityMetersPerSecond()));
         rightSim.setIntegratedSensorVelocity(velNative.apply(driveSim.getRightVelocityMetersPerSecond()));
+
+        state.drivePoseSim.update(driveSimReal.getHeading(),
+                driveSimReal.getLeftPositionMeters(),
+                driveSimReal.getRightPositionMeters());
+
+        log.recordOutput("Drive/realPosition", state.drivePoseSim.getPoseMeters());
 
         pigeonSim.setRawHeading(driveSim.getHeading().getDegrees());
     }

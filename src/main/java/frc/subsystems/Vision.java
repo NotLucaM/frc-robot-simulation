@@ -2,11 +2,13 @@ package frc.subsystems;
 
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.apriltag.AprilTagFieldLayout;
+import frc.constants.FieldConstants;
 import frc.robot.Commands;
 import frc.robot.RobotState;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
+import org.photonvision.SimVisionSystem;
+import org.photonvision.SimVisionTarget;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.PhotonUtils;
@@ -30,6 +32,18 @@ public class Vision extends SubsystemBase {
     private boolean driverMode = true;
     private boolean wantedChange = false;
     private boolean wantedSnapshot;
+
+    SimVisionSystem simVision =
+            new SimVisionSystem(
+                    "tape",
+                    120.0,
+                    new Transform3d(
+                            new Translation3d(0.0, 0.0, CAMERA_HEIGHT_METERS),
+                            new Rotation3d(0.0, CAMERA_PITCH_RADIANS, 0.0)),
+                    20,
+                    640,
+                    480,
+                    10);
 
     @Override
     public void update(Commands commands, RobotState state) {
@@ -97,42 +111,36 @@ public class Vision extends SubsystemBase {
             state.visionTarget = null;
             state.visionDistanceToTarget = 0.0;
         }
-
         var aprilTags = result.getTargets();
         for (var tag : aprilTags) {
             int targetId = tag.getFiducialId();
-            double poseAmbiguity = tag.getPoseAmbiguity();
 
             if (APRIL_FIELD.getTagPose(targetId).isEmpty()) {
                 break;
             }
+
             Pose3d targetFieldPose = APRIL_FIELD.getTagPose(targetId).get();
-
+            log.recordOutput("Vision/targetFieldPose", targetFieldPose.toPose2d());
             Transform3d bestCameraToTarget = tag.getBestCameraToTarget();
-            Transform3d alternateCameraToTarget = tag.getAlternateCameraToTarget();
+            Pose3d bestRobotField = targetFieldPose.transformBy(bestCameraToTarget.inverse());
 
-            // TODO: ensure adding is correct
-            Pose3d bestRobotField = targetFieldPose.plus(bestCameraToTarget);
-            Pose3d altRobotField = targetFieldPose.plus(alternateCameraToTarget);
-
-            Pose2d currentLocation = state.drivePose.getEstimatedPosition();
-            Translation2d currentTranslation2d = currentLocation.getTranslation();
-            Translation3d currentTranslation = new Translation3d(currentTranslation2d.getX(),
-                    currentTranslation2d.getY(), CAMERA_HEIGHT_METERS);
-            var bestDist = bestRobotField.getTranslation().getDistance(currentTranslation);
-            var altDist = altRobotField.getTranslation().getDistance(currentTranslation);
-
-            // TODO: ensure time is correct
-            if (bestDist <= altDist || poseAmbiguity < 0.2) {
-                state.drivePose.addVisionMeasurement(bestRobotField.toPose2d(), result.getTimestampSeconds());
-            } else {
-                state.drivePose.addVisionMeasurement(altRobotField.toPose2d(), result.getTimestampSeconds());
-            }
+            System.out.println(bestRobotField);
+            state.drivePose.addVisionMeasurement(bestRobotField.toPose2d(), result.getTimestampSeconds());
         }
+    }
+
+    @Override
+    public void simulate(RobotState state) {
+        simVision.processFrame(state.drivePoseSim.getPoseMeters());
     }
 
     @Override
     public void configure() {
         camera.setPipelineIndex(DEFAULT_INDEX);
+
+        double targetWidth = Units.inchesToMeters(6); // meters
+        double targetHeight = Units.inchesToMeters(6); // meters
+
+        APRIL_TAGS.forEach(s -> simVision.addSimVisionTarget(new SimVisionTarget(s.pose, targetWidth, targetHeight, s.ID)));
     }
 }

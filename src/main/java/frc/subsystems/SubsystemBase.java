@@ -19,7 +19,7 @@ public abstract class SubsystemBase {
     public abstract void read(RobotState state);
     public abstract void configure();
 
-    public void simulate() {}
+    public void simulate(RobotState state) {}
     public void log() {}
 
     @Override
