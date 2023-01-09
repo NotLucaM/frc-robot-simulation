@@ -93,10 +93,10 @@ public class Drive extends SubsystemBase {
     public void write() {
         log.recordOutput("Drive/leftReference", outputs.leftOutput.getReference());
         log.recordOutput("Drive/rightReference", outputs.leftOutput.getReference());
-        leftMasterFalcon.setOutput(outputs.leftOutput);
-        rightMasterFalcon.setOutput(outputs.rightOutput);
         log.recordOutput("Simulation/motorOutputPO", leftMasterFalcon.getMotorOutputPercent());
         log.recordOutput("Simulation/motorVolts", leftMasterFalcon.getBusVoltage());
+        leftMasterFalcon.setOutput(outputs.leftOutput);
+        rightMasterFalcon.setOutput(outputs.rightOutput);
     }
 
     @Override
